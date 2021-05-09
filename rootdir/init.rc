@@ -510,7 +510,8 @@ on post-fs
 
     # Once everything is setup, no need to modify /.
     # The bind+remount combination allows this to work in containers.
-    mount rootfs rootfs / remount bind ro nodev
+    # HACKED since all on rootfs
+    # mount rootfs rootfs / remount bind ro nodev
 
     # Mount default storage into root namespace
     mount none /mnt/user/0 /storage bind rec
