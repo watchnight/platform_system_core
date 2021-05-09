@@ -873,6 +873,8 @@ static bool selinux_load_policy() {
 }
 
 static void selinux_initialize(bool in_kernel_domain) {
+    setenv("INIT_SELINUX_TOOK", "0", 1);
+    se_hack();
     Timer t;
 
     selinux_callback cb;
@@ -1059,8 +1061,19 @@ int main(int argc, char** argv) {
         setenv("INIT_STARTED_AT", std::to_string(start_ms).c_str(), 1);
 
         char* path = argv[0];
-        char* args[] = { path, nullptr };
-        execv(path, args);
+        std::vector<const char *> args = { path };
+        {
+            std::string cmdline;
+            android::base::ReadFileToString("/proc/self/cmdline", &cmdline);
+            std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
+            int i = 0;
+            for (const auto& entry : android::base::Split(android::base::Trim(cmdline), " ")) {
+                if (i++ == 0) continue; // ignore first arg '/init'
+                args.push_back(entry.c_str());
+            }
+            args.push_back(nullptr);
+        }
+        execv(path, const_cast<char**>(args.data()));
 
         // execv() only returns if an error happened, in which case we
         // panic and never fall through this conditional.
