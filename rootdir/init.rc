@@ -354,7 +354,8 @@ on post-fs
 
     # Once everything is setup, no need to modify /.
     # The bind+remount combination allows this to work in containers.
-    mount rootfs rootfs / remount bind ro nodev
+    # all on rootfs
+    # mount rootfs rootfs / remount bind ro nodev
     # Mount default storage into root namespace
     mount none /mnt/runtime/default /storage bind rec
     mount none none /storage slave rec
