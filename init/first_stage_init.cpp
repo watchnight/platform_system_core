@@ -29,12 +29,14 @@
 
 #include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include <android-base/chrono_utils.h>
 #include <android-base/file.h>
 #include <android-base/logging.h>
+#include <android-base/strings.h>
 #include <modprobe/modprobe.h>
 #include <private/android_filesystem_config.h>
 
@@ -237,6 +239,12 @@ int FirstStageMain(int argc, char** argv) {
     CHECKCALL(mkdir("/dev/pts", 0755));
     CHECKCALL(mkdir("/dev/socket", 0755));
     CHECKCALL(mkdir("/dev/dm-user", 0755));
+    { // HACKED
+        // docker will override etc dir, cgroup setup process read file in /etc before early-init
+        mount("/system/etc", "/etc", "none", MS_BIND, NULL);
+        unshare(CLONE_NEWCGROUP);
+        mknod("/dev/fuse", S_IFCHR | 0666, makedev(10, 229)); // AmazonLinux2 missing fuse
+    }
     CHECKCALL(mount("devpts", "/dev/pts", "devpts", 0, NULL));
 #define MAKE_STR(x) __STRING(x)
     CHECKCALL(mount("proc", "/proc", "proc", 0, "hidepid=2,gid=" MAKE_STR(AID_READPROC)));
@@ -303,7 +311,7 @@ int FirstStageMain(int argc, char** argv) {
         for (const auto& [error_string, error_errno] : errors) {
             LOG(ERROR) << error_string << " " << strerror(error_errno);
         }
-        LOG(FATAL) << "Init encountered errors starting first stage, aborting";
+        //LOG(FATAL) << "Init encountered errors starting first stage, aborting"; // HACKED
     }
 
     LOG(INFO) << "init first stage started!";
@@ -417,12 +425,23 @@ int FirstStageMain(int argc, char** argv) {
            1);
 
     const char* path = "/system/bin/init";
-    const char* args[] = {path, "selinux_setup", nullptr};
+    std::vector<const char *> args = {path, "second_stage"};
+    {
+        std::string cmdline;
+        android::base::ReadFileToString("/proc/self/cmdline", &cmdline);
+        std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
+        int i = 0;
+        for (const auto& entry : android::base::Split(android::base::Trim(cmdline), " ")) {
+            if (i++ == 0) continue; // ignore first arg '/init'
+            args.push_back(entry.c_str());
+        }
+        args.push_back(nullptr);
+    }
     auto fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
     close(fd);
-    execv(path, const_cast<char**>(args));
+    execv(path, const_cast<char**>(args.data()));
 
     // execv() only returns if an error happened, in which case we
     // panic and never fall through this conditional.
