@@ -1020,6 +1020,7 @@ int main(int argc, char** argv) {
         mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755");
         mkdir("/dev/pts", 0755);
         mkdir("/dev/socket", 0755);
+        unshare(CLONE_NEWCGROUP); // HACKED
         mount("devpts", "/dev/pts", "devpts", 0, NULL);
         #define MAKE_STR(x) __STRING(x)
         mount("proc", "/proc", "proc", 0, "hidepid=2,gid=" MAKE_STR(AID_READPROC));
