@@ -21,9 +21,10 @@ subsystem msm_camera
     devname uevent_devpath
     dirname /dev/msm_camera
 
-subsystem input
-    devname uevent_devpath
-    dirname /dev/input
+# HACKED
+#subsystem input
+#    devname uevent_devpath
+#    dirname /dev/input
 
 subsystem mtd
     devname uevent_devpath
