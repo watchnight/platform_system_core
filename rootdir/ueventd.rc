@@ -12,9 +12,10 @@ subsystem drm
     devname uevent_devpath
     dirname /dev/dri
 
-subsystem input
-    devname uevent_devpath
-    dirname /dev/input
+# HACKED
+#subsystem input
+#    devname uevent_devpath
+#    dirname /dev/input
 
 subsystem sound
     devname uevent_devpath
