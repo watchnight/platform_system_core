@@ -1267,11 +1267,23 @@ static void ProcessKernelDt() {
 constexpr auto ANDROIDBOOT_PREFIX = "androidboot."sv;
 
 static void ProcessKernelCmdline() {
+    bool for_emulator = false;
     ImportKernelCmdline([&](const std::string& key, const std::string& value) {
-        if (StartsWith(key, ANDROIDBOOT_PREFIX)) {
+        if (key == "qemu") {
+            for_emulator = true;
+        } else if (StartsWith(key, ANDROIDBOOT_PREFIX)) {
             InitPropertySet("ro.boot." + key.substr(ANDROIDBOOT_PREFIX.size()), value);
         }
     });
+
+    if (for_emulator) {
+        ImportKernelCmdline([&](const std::string& key, const std::string& value) {
+            // In the emulator, export any kernel option with the "ro.kernel." prefix.
+            // HACKED
+            if (StartsWith(key, "ro.") || StartsWith(key, "qemu.")) InitPropertySet(key, value);
+            else InitPropertySet("ro.kernel." + key, value);
+        });
+    }
 }
 
 
