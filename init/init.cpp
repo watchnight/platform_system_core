@@ -180,6 +180,7 @@ void property_changed(const std::string& name, const std::string& value) {
     // waiting on a property.
     // In non-thermal-shutdown case, 'shutdown' trigger will be fired to let device specific
     // commands to be executed.
+#if 0 // HACKED
     if (name == "sys.powerctl") {
         // Despite the above comment, we can't call HandlePowerctlMessage() in this function,
         // because it modifies the contents of the action queue, which can cause the action queue
@@ -192,6 +193,7 @@ void property_changed(const std::string& name, const std::string& value) {
         shutdown_command = value;
         do_shutdown = true;
     }
+#endif
 
     if (property_triggers_enabled) ActionManager::GetInstance().QueuePropertyChange(name, value);
 
