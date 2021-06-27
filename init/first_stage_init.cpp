@@ -369,7 +369,7 @@ int FirstStageMain(int argc, char** argv) {
     }
 
     if (!DoFirstStageMount(!created_devices)) {
-        LOG(FATAL) << "Failed to mount required partitions early ...";
+        LOG(ERROR) << "Failed to mount required partitions early ..."; // HACKED
     }
 
     struct stat new_root_info;
