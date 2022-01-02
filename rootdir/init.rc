@@ -32,6 +32,7 @@ on early-init
     # cgroup for system_server and surfaceflinger
     mkdir /dev/memcg/system 0550 system system
 
+    write /dev/.coldboot_done 1
     start ueventd
 
     # Run apexd-bootstrap so that APEXes that provide critical libraries
