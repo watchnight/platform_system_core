@@ -575,7 +575,7 @@ int main(int argc, char** argv) {
         setenv("PATH", _PATH_DEFPATH, 1);
         // Get the basic filesystem setup we need put together in the initramdisk
         // on / and then we'll let the rc file figure out the rest.
-        mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755");
+        //mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755");
         mkdir("/dev/pts", 0755);
         mkdir("/dev/socket", 0755);
         unshare(CLONE_NEWCGROUP); // HACKED
