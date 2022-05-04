@@ -908,7 +908,7 @@ int SecondStageMain(int argc, char** argv) {
         if (shutdown_command) {
             LOG(INFO) << "Got shutdown_command '" << *shutdown_command
                       << "' Calling HandlePowerctlMessage()";
-            HandlePowerctlMessage(*shutdown_command);
+            //HandlePowerctlMessage(*shutdown_command);
             shutdown_state.set_do_shutdown(false);
         }
 
