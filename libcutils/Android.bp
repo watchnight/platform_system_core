@@ -106,7 +106,7 @@ cc_library {
         android: {
             srcs: libcutils_nonwindows_sources + [
                 "android_reboot.c",
-                "ashmem-dev.c",
+                "ashmem-dev.cpp",
                 "klog.cpp",
                 "partition_utils.c",
                 "properties.cpp",
@@ -148,7 +148,7 @@ cc_library {
         },
     },
 
-    shared_libs: ["liblog"],
+    shared_libs: ["liblog", "libbase"],
     header_libs: [
         "libcutils_headers",
         "libutils_headers",

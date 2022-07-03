@@ -135,8 +135,14 @@ static int __ashmem_is_ashmem(int fd, int fatal)
     return -1;
 }
 
+#include "ashmem-hack.inc"
+
 int ashmem_valid(int fd)
 {
+    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+        return 1;
+    }
+
     return __ashmem_is_ashmem(fd, 0) >= 0;
 }
 
@@ -150,6 +156,10 @@ int ashmem_valid(int fd)
 int ashmem_create_region(const char *name, size_t size)
 {
     int ret, save_errno;
+
+    if (has_memfd_support()) {
+        return memfd_create_region(name ? name : "none", size);
+    }
 
     int fd = __ashmem_open();
     if (fd < 0) {
@@ -182,6 +192,10 @@ error:
 
 int ashmem_set_prot_region(int fd, int prot)
 {
+    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+        return memfd_set_prot_region(fd, prot);
+    }
+
     int ret = __ashmem_is_ashmem(fd, 1);
     if (ret < 0) {
         return ret;
@@ -192,7 +206,16 @@ int ashmem_set_prot_region(int fd, int prot)
 
 int ashmem_pin_region(int fd, size_t offset, size_t len)
 {
-    struct ashmem_pin pin = { offset, len };
+    if (!pin_deprecation_warn || debug_log) {
+        ALOGE("Pinning is deprecated since Android Q. Please use trim or other methods.\n");
+        pin_deprecation_warn = true;
+    }
+
+    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+        return 0;
+    }
+
+    struct ashmem_pin pin = { static_cast<uint32_t>(offset), static_cast<uint32_t>(len) };
 
     int ret = __ashmem_is_ashmem(fd, 1);
     if (ret < 0) {
@@ -204,7 +227,16 @@ int ashmem_pin_region(int fd, size_t offset, size_t len)
 
 int ashmem_unpin_region(int fd, size_t offset, size_t len)
 {
-    struct ashmem_pin pin = { offset, len };
+    if (!pin_deprecation_warn || debug_log) {
+        ALOGE("Pinning is deprecated since Android Q. Please use trim or other methods.\n");
+        pin_deprecation_warn = true;
+    }
+
+    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+        return 0;
+    }
+
+    struct ashmem_pin pin = { static_cast<uint32_t>(offset), static_cast<uint32_t>(len) };
 
     int ret = __ashmem_is_ashmem(fd, 1);
     if (ret < 0) {
@@ -216,6 +248,21 @@ int ashmem_unpin_region(int fd, size_t offset, size_t len)
 
 int ashmem_get_size_region(int fd)
 {
+    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+        struct stat sb;
+
+        if (fstat(fd, &sb) == -1) {
+            ALOGE("ashmem_get_size_region(%d): fstat failed: %s\n", fd, strerror(errno));
+            return -1;
+        }
+
+        if (debug_log) {
+            ALOGD("ashmem_get_size_region(%d): %d\n", fd, static_cast<int>(sb.st_size));
+        }
+
+        return sb.st_size;
+    }
+
     int ret = __ashmem_is_ashmem(fd, 1);
     if (ret < 0) {
         return ret;
