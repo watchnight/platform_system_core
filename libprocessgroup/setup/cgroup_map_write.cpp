@@ -309,6 +309,11 @@ static bool SetupCgroup(const CgroupDescriptor& descriptor) {
             result = mount("none", controller->path(), "cgroup", MS_NODEV | MS_NOEXEC | MS_NOSUID,
                            controller->name());
         }
+        if (result < 0 && (!strcmp(controller->name(), "cpu")
+                        || !strcmp(controller->name(), "cpuacct"))) {
+            result = mount("none", controller->path(), "cgroup", MS_NODEV | MS_NOEXEC | MS_NOSUID,
+                           "cpu,cpuacct");
+        }
     }
 
     if (result < 0) {
