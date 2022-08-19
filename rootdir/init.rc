@@ -25,7 +25,7 @@ on early-init
     restorecon /postinstall
 
     # Mount cgroup mount point for cpu accounting
-    mount cgroup none /acct nodev noexec nosuid cpuacct
+    mount cgroup none /acct nodev noexec nosuid cpu,cpuacct
     mkdir /acct/uid
 
     # root memory control cgroup, used by lmkd
@@ -150,7 +150,7 @@ on init
 
     # Create cgroup mount points for process groups
     mkdir /dev/cpuctl
-    mount cgroup none /dev/cpuctl nodev noexec nosuid cpu
+    mount cgroup none /dev/cpuctl nodev noexec nosuid cpu,cpuacct
     chown system system /dev/cpuctl
     chown system system /dev/cpuctl/tasks
     chmod 0666 /dev/cpuctl/tasks
